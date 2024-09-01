@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "game-prog-nyumon"
+version = "0.1.0"
+description = ""
+authors = ["yoneda <yhayato1320@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyglet = "^2.0.17"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
