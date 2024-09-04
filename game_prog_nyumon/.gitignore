@@ -1,2 +1,3 @@
 *.zip
 resource/
+__pycache__
