@@ -8,6 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 pyglet = "^2.0.17"
+kivy = "^2.3.0"
+black = "^24.8.0"
+isort = "^5.13.2"
 
 
 [build-system]

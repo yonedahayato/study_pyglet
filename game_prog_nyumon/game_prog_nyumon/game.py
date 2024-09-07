@@ -1,9 +1,9 @@
-import pyglet
-# from pyglet.window.key import *
-
 import math
 import random
 from pathlib import Path
+
+import pyglet
+from pyglet.window.key import ESCAPE
 
 RESOURCE_DIR = Path(__file__).resolve().parents[1] / "resource" / "download_pipoya"
 pyglet.resource.path = [RESOURCE_DIR]
@@ -21,6 +21,8 @@ def on_draw():
     """
     ウィンドウの描画
     """
+    # print("on_draw func")
+
     # 背景色の設定
     pyglet.gl.glClearColor(*background, 1)
 
@@ -29,6 +31,9 @@ def on_draw():
 
     # バッチを描画
     batch.draw()
+
+    if score_draw:
+        raise Exception("on_draw func")
 
 # == スコアに関する機能 ==
 
@@ -73,6 +78,35 @@ fps_label = pyglet.text.Label(anchor_x="center")
 # == キーボードに関する機能 ==
 
 # 現在押されているキーの一覧と、1フレーム前に押されていたキーの一覧を管理するために、空の集合を作成する
+key_state = key_state_old = set()
+
+@window.event
+def on_key_press(symbol, modifiers) -> None:
+    """
+    キーが押されたら、現在押されているキーの一覧に追加する
+    """
+    key_state.add(symbol)
+
+@window.event
+def on_key_release(symbol, modifiers) -> None:
+    """
+    キーが離されたら、現在押されているキーの一覧から削除する
+    """
+    key_state.discard(symbol)
+
+def key(k: str) -> bool:
+    """
+    指定したキーが現在押されていたら、True を返す
+    """
+
+    return k in key_state
+
+def key_old(k: str) -> bool:
+    """
+    指定したキーが1フレーム前に押されていたら、Trueを返す
+    """
+
+    return k in key_state_old
 
 # == 画像に関する機能 ==
 
@@ -94,6 +128,11 @@ def image(file: str) -> pyglet.image.AbstractImage:
 
     return img
 
+# == カメラに関する機能 ==
+
+# カメラの座標を (0, 0) で初期化する
+camera_x = camera_y = 0
+
 # == キャラクター実行に関する機能 ==
 
 mover = []
@@ -112,7 +151,7 @@ class Mover:
     pass
 
 def add(move_fun: callable,
-        image: pyglet.image.AbstractImage = None,
+        image: pyglet.image.TextureRegion = None,
         size: float = 0.1,
         x: int = 0,
         y: int = 0,
@@ -136,6 +175,8 @@ def add(move_fun: callable,
     Returns:
         Mover: 作成したキャラクター
     """
+    print("add func")
+    print(f"image: {type(image)}")
 
     m = Mover()
     m.move = move_fun
@@ -157,7 +198,7 @@ def add(move_fun: callable,
     m.life = 1
 
     for k, v in kwargs.items():
-        setter(m, k, v)
+        setattr(m, k, v)
 
     mover.append(m)
 
@@ -173,11 +214,16 @@ def move(dt: float) -> None:
     Returns:
         None
     """
+    # print("move func")
     global time_sum, time_min, pause, mover
+
+    # 合計の経過時間に、前回からの経過時間を加算する
+
+    time_sum += dt
 
     # 一時停止していなくて、かつ経過時間が最短の経過時間より大きければ,
     # キャラクターを動かす
-    if not pause and time_sum >= time_min:
+    if (not pause) and time_sum >= time_min:
         time_sum = 0
         for m in mover:
             m.move(m)
@@ -195,7 +241,7 @@ def move(dt: float) -> None:
 
                 # スプライトの座標を設定する
                 m.sprite.x = (m.x - camera_x) * w2 + w2
-                m.sprite.y = (m.y - camera_x) * w2 + h2
+                m.sprite.y = (m.y - camera_y) * w2 + h2
 
                 # スプライトの角度を設定する
                 m.sprite.rotation = -m.r * 360
@@ -212,8 +258,6 @@ def move(dt: float) -> None:
     # エスケープキーを押したら、プログラムを終了する
     if key(ESCAPE):
         pyglet.app.exit()
-
-
 
 # == ゲームの実行に関する機能 ==
 
@@ -239,6 +283,7 @@ def run(start_fun: callable,
     Returns:
         None
     """
+    print("run func")
     global start, background, text_color, text_font_name
 
     start = start_fun

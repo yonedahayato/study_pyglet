@@ -4,11 +4,7 @@ from pathlib import Path
 GAME_DIR = str(Path(__file__).resolve().parents[1])
 sys.path.append(GAME_DIR)
 
-from game import (
-    image,
-    run,
-    add,
-)
+from game import add, image, run
 
 chicken_image_file = "chicken.png"
 image_player = image(chicken_image_file)
@@ -24,8 +20,10 @@ def start():
     """
     ゲームの開始処理
     """
+    print("start func")
     add(player, image_player, size=0.1, 
         x=-1.1, y=0, vx=0.01, vy=0)
 
 if __name__ == "__main__":
+    print("player1.py")
     run(start, 1280, 720)
