@@ -1,22 +1,26 @@
 #:kivy 1.0.9
 
 <PongBall>:
-    # size: 300, 300
-    # canvas:
-    #     Color:
-    #         rgba: 1, 0, 0, 1
-    #     Ellipse:
-    #         pos: self.pos
-    #         size: self.size
+    size: 300, 300
+    canvas:
+        Color:
+            rgba: 0, 0, 1, 1
+        Ellipse:
+            pos: self.pos
+            size: self.size
 
+<CharacterBall>:
     source: ''
-    size: self.texture_size
+    # size: self.texture_size
     # size: self.size
+    size: 400, 400
     pos: self.pos
 
 <PlayerGame>:
     #.py で参照する変数: .kv で参照する変数
     ball: pong_ball
+    character_ball: character_ball
+    cho_cho: cho_cho
 
     canvas.before:
         Color:
@@ -27,4 +31,12 @@
 
     PongBall:
         id: pong_ball
-        # center: self.parent.center
+        center: self.parent.center
+
+    CharacterBall:
+        id: character_ball
+        center: self.parent.center
+
+    CharacterBall:
+        id: cho_cho
+        center: self.parent.center
