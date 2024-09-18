@@ -15,6 +15,14 @@
     # size: self.size
     size: 400, 400
     pos: self.pos
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: root.angle
+            axis: 0, 0, 1
+            origin: root.center
+    canvas.after:
+        PopMatrix
 
 <PlayerGame>:
     #.py で参照する変数: .kv で参照する変数

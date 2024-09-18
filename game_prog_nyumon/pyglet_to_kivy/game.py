@@ -56,12 +56,50 @@ class PongBall(Widget):
             self.pos: kivy.properties.ObservableReferenceList = Vector(*self.velocity) + self.pos
 
 class CharacterBall(Image):
+    """
+    キャラクターのオブジェクト
+
+    Attributes:
+        velocity_x (NumericProperty): X軸方向の速度
+        velocity_y (NumericProperty): Y軸方向の速度
+        velocity (ReferenceListProperty): 速度ベクトル
+        angle (NumericProperty): 回転角度
+        shrinking_speed (float): オブジェクトの縮小速度
+        life (int): キャラクターのライフ
+            0 になると削除される
+    """
     velocity_x = NumericProperty(0)
     velocity_y = NumericProperty(0)
     velocity = ReferenceListProperty(velocity_x, velocity_y)
 
+    angle = NumericProperty(0)
+    shrinking_speed: float = 0.001
+    life: int = 1
+    min_size: int = 150
+
     def move(self):
+        """
+        1 step における動作処理
+
+        Note:
+            1. pos の更新
+            2. angle の更新
+            3. size の更新
+            4. life の更新
+        """
         self.pos: kivy.properties.ObservableReferenceList = Vector(*self.velocity) + self.pos
+        self.angle += 1
+
+        shrinking_rate = 1 - self.shrinking_speed
+        size_x = self.size[0] * shrinking_rate
+        size_y = self.size[1] * shrinking_rate
+        self.size = [size_x, size_y]
+
+        if size_x < self.min_size or size_y < self.min_size:
+            self.life = 0
+
+    def delete(self):
+        self.size = [0, 0]
 
 class PlayerGame(Widget):
     """
@@ -72,6 +110,42 @@ class PlayerGame(Widget):
     cho_cho = ObjectProperty(None)
 
     keys = []
+    movers = []
+
+    def __init__(self, **kwargs):
+        super(PlayerGame, self).__init__(**kwargs)
+
+        self._keyboard = Window.request_keyboard(
+            self._keyboard_closed, self, 'text')
+
+        if self._keyboard.widget:
+            # If it exists, this widget is a VKeyboard object which you can use
+            # to change the keyboard layout.
+            pass
+
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+    def _keyboard_closed(self):
+        print('My keyboard have been closed!')
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        print('The key', keycode, 'have been pressed')
+        print(' - text is %r' % text)
+        print(' - modifiers are %r' % modifiers)
+
+        # Keycode is composed of an integer + a string
+        # If we hit escape, release the keyboard
+        if keycode[1] == 'escape':
+            keyboard.release()
+
+        if keycode[1] in ["up", "down", "left", "right"]:
+            self.keys.append(keycode[1])
+
+        # Return True to accept the key. Otherwise, it will be used by
+        # the system.
+        return True
 
     def set_image_path(self,
                        object: ObjectProperty,
@@ -108,6 +182,9 @@ class PlayerGame(Widget):
         self.cho_cho = self.serve_ball(self.cho_cho)
 
     def updata_each_ball(self, ball):
+        """
+        ボールを動かす
+        """
         ball.move()
 
         # bounce off top and bottom
@@ -132,42 +209,12 @@ class PlayerGame(Widget):
                 self.ball.move(operation=key)
 
         self.ball = self.updata_each_ball(self.ball)
-        self.character_ball = self.updata_each_ball(self.character_ball)
+
+        if self.character_ball.life == 0:
+            self.character_ball.delete()
+        else:
+            self.character_ball = self.updata_each_ball(self.character_ball)
         self.cho_cho = self.updata_each_ball(self.cho_cho)
-
-    def __init__(self, **kwargs):
-        super(PlayerGame, self).__init__(**kwargs)
-
-        self._keyboard = Window.request_keyboard(
-            self._keyboard_closed, self, 'text')
-
-        if self._keyboard.widget:
-            # If it exists, this widget is a VKeyboard object which you can use
-            # to change the keyboard layout.
-            pass
-        self._keyboard.bind(on_key_down=self._on_keyboard_down)
-
-    def _keyboard_closed(self):
-        print('My keyboard have been closed!')
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
-
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        print('The key', keycode, 'have been pressed')
-        print(' - text is %r' % text)
-        print(' - modifiers are %r' % modifiers)
-
-        # Keycode is composed of an integer + a string
-        # If we hit escape, release the keyboard
-        if keycode[1] == 'escape':
-            keyboard.release()
-
-        if keycode[1] in ["up", "down", "left", "right"]:
-            self.keys.append(keycode[1])
-
-        # Return True to accept the key. Otherwise, it will be used by
-        # the system.
-        return True
 
 class PlayerApp(App):
     def build(self):

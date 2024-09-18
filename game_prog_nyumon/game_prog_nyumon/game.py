@@ -259,6 +259,14 @@ def move(dt: float) -> None:
     if key(ESCAPE):
         pyglet.app.exit()
 
+def group(*move):
+    """
+    キャラクターの取得
+    """
+    for m in mover:
+        if m in move:
+            yield m
+
 # == ゲームの実行に関する機能 ==
 
 def run(start_fun: callable,
