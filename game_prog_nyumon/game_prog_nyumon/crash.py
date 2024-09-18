@@ -9,11 +9,11 @@ image_crash = image("crash.png")
 def crash(c):
     
     # 座標に速度を加算して移動する
-    c.x = c.vx
-    c.y = c.vy
+    c.x += c.vx
+    c.y += c.vy
 
     # 動いている感じを出すために回転させる
-    c.r = 0.2
+    c.r += 0.2
 
     # サイズに縮小率を乗算して、次第にサイズを小さくする
     c.sx *= c.vs

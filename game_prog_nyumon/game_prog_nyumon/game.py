@@ -264,7 +264,7 @@ def group(*move):
     キャラクターの取得
     """
     for m in mover:
-        if m in move:
+        if m.move in move:
             yield m
 
 # == ゲームの実行に関する機能 ==
