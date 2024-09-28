@@ -14,6 +14,8 @@ from kivy.clock import Clock
 from pathlib import Path
 from random import randint
 
+from keyboard import Keyboard
+
 # from kivy.lang import Builder
 # Builder.load_file('./pyglet_to_kivy/player.kv')
 
@@ -30,19 +32,36 @@ FPS: float = 60.0
 # RESOURCE_DIR = Path(__file__).resolve().parents[1] / "resource" / "download_pipoya"
 RESOURCE_DIR = Path(__file__).resolve().parents[1] / "resource"
 
-class PongBall(Widget):
+class BaseObject:
     """
-    ボールの物体
+    物体全般に必要な設定
+
+    Attributes:
+        life (int): キャラクターのライフ
+            0 になると削除される
     """
-    velocity_x = NumericProperty(0)
-    velocity_y = NumericProperty(0)
-    velocity = ReferenceListProperty(velocity_x, velocity_y)
+    life: int = 1
 
-    v_operation = 20
+    def delete(self):
+        self.size = [0, 0]
 
-    def move(self, operation: str = ""):
+
+class OperableObject(BaseObject):
+    """
+    操作可能なオブジェクト
+
+    Attributes:
+        v_operation (int): 操作時の移動速度
+    """
+
+    v_operation: int = 20
+
+    def operate(self, operation: str = ""):
         """
-        等速直線運動の場合の動く処理
+        入力による操作を行う
+
+        Args:
+            operation (str): 操作内容
         """
         if operation == "up":
             self.pos = [self.pos[0], self.pos[1] + self.v_operation]
@@ -53,11 +72,14 @@ class PongBall(Widget):
         elif operation == "right":
             self.pos = [self.pos[0] + self.v_operation, self.pos[1]]
         else:
-            self.pos: kivy.properties.ObservableReferenceList = Vector(*self.velocity) + self.pos
+            raise Exception("操作内容が異常")
+        
+    def move(self, operation: str = ""):
+        self.operate(operation)
 
-class CharacterBall(Image):
+class FloatingObject(BaseObject):
     """
-    キャラクターのオブジェクト
+    浮遊する物体
 
     Attributes:
         velocity_x (NumericProperty): X軸方向の速度
@@ -65,16 +87,13 @@ class CharacterBall(Image):
         velocity (ReferenceListProperty): 速度ベクトル
         angle (NumericProperty): 回転角度
         shrinking_speed (float): オブジェクトの縮小速度
-        life (int): キャラクターのライフ
-            0 になると削除される
+        min_size (int): 存在できる最小のサイズ
     """
     velocity_x = NumericProperty(0)
     velocity_y = NumericProperty(0)
     velocity = ReferenceListProperty(velocity_x, velocity_y)
-
     angle = NumericProperty(0)
     shrinking_speed: float = 0.001
-    life: int = 1
     min_size: int = 150
 
     def move(self):
@@ -98,54 +117,31 @@ class CharacterBall(Image):
         if size_x < self.min_size or size_y < self.min_size:
             self.life = 0
 
-    def delete(self):
-        self.size = [0, 0]
+class ColorBall(Widget, OperableObject):
+    """
+    色のついたボール
+    """
 
-class PlayerGame(Widget):
+class CharacterBall(Image, FloatingObject):
+    """
+    キャラクターのオブジェクト
+    """
+
+class PlayerBall(Image, OperableObject):
+    """
+    """
+
+class PlayerGame(Keyboard):
     """
     ゲームの実行を管理
     """
     ball = ObjectProperty(None)
     character_ball = ObjectProperty(None)
     cho_cho = ObjectProperty(None)
+    baymax = ObjectProperty(None)
 
     keys = []
     movers = []
-
-    def __init__(self, **kwargs):
-        super(PlayerGame, self).__init__(**kwargs)
-
-        self._keyboard = Window.request_keyboard(
-            self._keyboard_closed, self, 'text')
-
-        if self._keyboard.widget:
-            # If it exists, this widget is a VKeyboard object which you can use
-            # to change the keyboard layout.
-            pass
-
-        self._keyboard.bind(on_key_down=self._on_keyboard_down)
-
-    def _keyboard_closed(self):
-        print('My keyboard have been closed!')
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
-
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        print('The key', keycode, 'have been pressed')
-        print(' - text is %r' % text)
-        print(' - modifiers are %r' % modifiers)
-
-        # Keycode is composed of an integer + a string
-        # If we hit escape, release the keyboard
-        if keycode[1] == 'escape':
-            keyboard.release()
-
-        if keycode[1] in ["up", "down", "left", "right"]:
-            self.keys.append(keycode[1])
-
-        # Return True to accept the key. Otherwise, it will be used by
-        # the system.
-        return True
 
     def set_image_path(self,
                        object: ObjectProperty,
@@ -163,8 +159,15 @@ class PlayerGame(Widget):
         """
         self.character_ball = self.set_image_path(self.character_ball, "by_max.png")
         self.cho_cho = self.set_image_path(self.cho_cho, "chocho.webp")
+        self.baymax = self.set_image_path(self.baymax, "baymax.png")
 
-    def serve_ball(self, ball):
+    def serve_ball(self, ball: ObjectProperty):
+        """
+        物体を動かし始める
+
+        Args:
+            ball (ObjectProperty): 動かし始める物体
+        """
         ball.center = self.center
         ball.velocity = Vector(4, 0).rotate(randint(0, 360))
 
@@ -172,14 +175,12 @@ class PlayerGame(Widget):
 
     def serve_balls(self):
         self.ball.center = self.center
-        # self.ball.center = [0, Window.size[1] / 2]
-
-        # self.ball.velocity = Vector(4, 0).rotate(0)
-        # self.ball.velocity = Vector(4, 0).rotate(randint(0, 360))
         self.ball.velocity = (0, 0)
 
         self.character_ball = self.serve_ball(self.character_ball)
         self.cho_cho = self.serve_ball(self.cho_cho)
+
+        self.baymax.center = self.center
 
     def updata_each_ball(self, ball):
         """
@@ -206,15 +207,17 @@ class PlayerGame(Widget):
             print(f"update key: {key}")
 
             if key in ["up", "down", "left", "right"]:
-                self.ball.move(operation=key)
+                # self.ball.move(operation=key)
+                self.baymax.move(operation=key)
 
-        self.ball = self.updata_each_ball(self.ball)
+        # self.ball = self.updata_each_ball(self.ball)
 
         if self.character_ball.life == 0:
             self.character_ball.delete()
         else:
             self.character_ball = self.updata_each_ball(self.character_ball)
         self.cho_cho = self.updata_each_ball(self.cho_cho)
+        # self.baymax = self.updata_each_ball(self.baymax)
 
 class PlayerApp(App):
     def build(self):

@@ -1,6 +1,6 @@
 #:kivy 1.0.9
 
-<PongBall>:
+<ColorBall>:
     size: 300, 300
     canvas:
         Color:
@@ -24,11 +24,19 @@
     canvas.after:
         PopMatrix
 
+<PlayerBall>:
+    source: ''
+    # size: self.texture_size
+    # size: self.size
+    size: 400, 400
+    pos: self.pos
+
 <PlayerGame>:
     #.py で参照する変数: .kv で参照する変数
-    ball: pong_ball
+    ball: color_ball
     character_ball: character_ball
     cho_cho: cho_cho
+    baymax: baymax
 
     canvas.before:
         Color:
@@ -37,8 +45,8 @@
             pos: self.pos
             size: self.size
 
-    PongBall:
-        id: pong_ball
+    ColorBall:
+        id: color_ball
         center: self.parent.center
 
     CharacterBall:
@@ -47,4 +55,8 @@
 
     CharacterBall:
         id: cho_cho
+        center: self.parent.center
+
+    PlayerBall:
+        id: baymax
         center: self.parent.center
