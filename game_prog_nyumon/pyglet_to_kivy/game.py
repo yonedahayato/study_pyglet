@@ -1,6 +1,5 @@
 import kivy
 from kivy.app import App
-from kivy.core.window import Window
 from kivy.properties import (
     NumericProperty, 
     ReferenceListProperty, 
@@ -14,14 +13,10 @@ from kivy.clock import Clock
 from pathlib import Path
 from random import randint
 
-from keyboard import Keyboard
+from settings.keyboard import Keyboard
 
 # from kivy.lang import Builder
 # Builder.load_file('./pyglet_to_kivy/player.kv')
-
-# == ウィンドウに関する設定 ==
-
-Window.size = (1280, 720)
 
 # == FPSに関する設定 ==
 

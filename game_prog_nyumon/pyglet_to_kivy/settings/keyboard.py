@@ -1,5 +1,6 @@
 from kivy.uix.widget import Widget
-from kivy.core.window import Window
+
+from . import Window
 
 class Keyboard(Widget):
     def __init__(self, **kwargs):
